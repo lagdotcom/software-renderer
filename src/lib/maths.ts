@@ -14,5 +14,5 @@ export function pointInTriangle(a: float2, b: float2, c: float2, p: float2) {
   const sideAB = pointOnRightSideOfLine(a, b, p);
   const sideBC = pointOnRightSideOfLine(b, c, p);
   const sideCA = pointOnRightSideOfLine(c, a, p);
-  return sideAB === sideBC && sideBC === sideCA;
+  return sideAB && sideBC && sideCA;
 }

@@ -28,9 +28,7 @@ const config = {
   // minify: true,
   plugins: [],
   loader: {
-    ".json": "file",
-    ".ogg": "file",
-    ".png": "file",
+    ".obj": "text",
   },
 };
 export default config;

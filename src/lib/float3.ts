@@ -1,3 +1,4 @@
+import float2 from "./float2";
 import Random from "./Random";
 
 export default class float3<T extends number = number> {
@@ -30,5 +31,17 @@ export default class float3<T extends number = number> {
   }
   set b(value: T) {
     this.z = value;
+  }
+
+  get xy() {
+    return new float2(this.x, this.y);
+  }
+
+  add(o: float3) {
+    return new float3(this.x + o.x, this.y + o.y, this.z + o.z);
+  }
+
+  mul(x: number, y = x, z = y) {
+    return new float3(this.x * x, this.y * y, this.z * z);
   }
 }
