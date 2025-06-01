@@ -1,6 +1,7 @@
 /*eslint-env node*/
 
 import { config as loadDotEnvConfig } from "dotenv";
+import ObjModule from "./ObjModule.mjs";
 
 const envConfig = loadDotEnvConfig();
 const define = {
@@ -26,9 +27,7 @@ const config = {
   outfile: "docs/bundle.js",
   define,
   // minify: true,
-  plugins: [],
-  loader: {
-    ".obj": "text",
-  },
+  plugins: [ObjModule()],
+  loader: {},
 };
 export default config;

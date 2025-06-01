@@ -7,10 +7,10 @@ import {
   createTestImage02,
 } from "./lib/helpers";
 import { pointInTriangle } from "./lib/maths";
+import Model from "./lib/Model";
 import { MathRNG } from "./lib/Random";
 import RenderTarget from "./lib/RenderTarget";
 import Transform from "./lib/Transform";
-import { parseObj } from "./lib/wavefront";
 import cubeObj from "./res/cube.obj";
 import { clamp } from "./tools/clamp";
 import enumerate from "./tools/enumerate";
@@ -129,7 +129,7 @@ export function cubeDemo(ctx: CanvasRenderingContext2D, fov: Radians = 1) {
   const triangleColours = enumerate(75).map(() =>
     float3.random<Intensity>(rng, 1, 1, 1),
   );
-  const model = parseObj(cubeObj);
+  const model = new Model(cubeObj);
   const { width, height } = ctx.canvas;
   const renderTarget = new RenderTarget(width, height);
   const transform = new Transform();

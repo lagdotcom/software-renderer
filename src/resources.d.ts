@@ -1,4 +1,4 @@
 declare module "*.obj" {
-  const data: import("./flavours").WavefrontObjData;
-  export default data;
+  const model: import("./lib/Model").ModelJson;
+  export default model;
 }
