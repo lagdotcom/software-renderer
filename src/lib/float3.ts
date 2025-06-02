@@ -14,6 +14,8 @@ export default class float3<T extends number = number> {
     public z: T,
   ) {}
 
+  static zero = new float3<number>(0, 0, 0);
+
   static random<T extends number>(rng: Random, x: T, y: T, z: T) {
     return new float3(rng.upTo(x), rng.upTo(y), rng.upTo(z));
   }
@@ -47,8 +49,23 @@ export default class float3<T extends number = number> {
     return new float2(this.x, this.y);
   }
 
+  get magnitude() {
+    return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+  }
+
+  normalize() {
+    const { magnitude, x, y, z } = this;
+    if (!magnitude) return new float3(0, 0, 0);
+
+    return new float3(x / magnitude, y / magnitude, z / magnitude);
+  }
+
   add(o: float3like) {
     return new float3(this.x + o.x, this.y + o.y, this.z + o.z);
+  }
+
+  sub(o: float3like) {
+    return new float3(this.x - o.x, this.y - o.y, this.z - o.z);
   }
 
   mul(x: number, y = x, z = y) {

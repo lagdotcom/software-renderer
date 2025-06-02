@@ -1,5 +1,6 @@
 import float2 from "./float2";
 import float3 from "./float3";
+import Transform from "./Transform";
 
 export interface ModelJson {
   vertices: [x: number, y: number, z: number, w: number][];
@@ -25,7 +26,10 @@ export default class Model {
   vertexNormals: float3[];
   triangles: Triangle[];
 
-  constructor(json: ModelJson) {
+  constructor(
+    json: ModelJson,
+    public transform = new Transform(),
+  ) {
     this.vertices = json.vertices.map(([x, y, z]) => new float3(x, y, z));
     this.textureCoords = json.textureCoords.map(([u, v]) => new float2(u, v));
     this.vertexNormals = json.vertexNormals.map(
@@ -50,8 +54,8 @@ export default class Model {
   }
 
   translate(x = 0, y = 0, z = 0) {
-    this.vertices = this.vertices.map((v) => v.add({ x, y, z }));
-    return this.updateTriangles();
+    this.transform.position = this.transform.position.add({ x, y, z });
+    return this;
   }
 
   scale(x: number, y = x, z = y) {

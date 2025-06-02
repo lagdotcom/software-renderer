@@ -1,3 +1,4 @@
+import { Degrees, Radians } from "../flavours";
 import float2 from "./float2";
 import float3 from "./float3";
 
@@ -27,4 +28,10 @@ export function pointInTriangle(a: float2, b: float2, c: float2, p: float2) {
   const weights = new float3(weightA, weightB, weightC);
 
   return [inTri && totalArea > 0, weights] as const;
+}
+
+const twoPi = Math.PI * 2;
+
+export function toRadians(a: Degrees): Radians {
+  return (a / 360) * twoPi;
 }

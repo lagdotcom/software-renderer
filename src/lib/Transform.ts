@@ -15,6 +15,11 @@ export default class Transform {
     return this.transformVector(i, j, k, p).add(this.position);
   }
 
+  toLocalPoint(p: float3) {
+    const { i, j, k } = this.getInverseBasisVectors();
+    return this.transformVector(i, j, k, p).sub(this.position);
+  }
+
   getBasisVectors() {
     const { yaw, pitch } = this;
 
@@ -30,6 +35,14 @@ export default class Transform {
     const j = this.transformVector(iYaw, jYaw, kYaw, jPitch);
     const k = this.transformVector(iYaw, jYaw, kYaw, kPitch);
     return { i, j, k };
+  }
+
+  getInverseBasisVectors() {
+    const { i, j, k } = this.getBasisVectors();
+    const ii = new float3(i.x, j.x, k.x);
+    const ji = new float3(i.y, j.y, k.y);
+    const ki = new float3(i.z, j.z, k.z);
+    return { i: ii, j: ji, k: ki };
   }
 
   transformVector(i: float3, j: float3, k: float3, v: float3) {

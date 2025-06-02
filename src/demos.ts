@@ -1,4 +1,5 @@
-import { Intensity, Pixels, Radians } from "./flavours";
+import { Degrees, Intensity, Milliseconds, Pixels } from "./flavours";
+import Camera from "./lib/Camera";
 import float2 from "./lib/float2";
 import float3 from "./lib/float3";
 import {
@@ -6,7 +7,7 @@ import {
   createTestImage01,
   createTestImage02,
 } from "./lib/helpers";
-import { pointInTriangle } from "./lib/maths";
+import { pointInTriangle, toRadians } from "./lib/maths";
 import Model from "./lib/Model";
 import { MathRNG } from "./lib/Random";
 import RenderTarget from "./lib/RenderTarget";
@@ -123,10 +124,36 @@ function toImageData(image: float3<Intensity>[][]) {
   return new ImageData(bytes, width, height);
 }
 
+function addKeyHandler(element: HTMLElement) {
+  const keys = new Set<string>();
+
+  element.addEventListener("keydown", (e) => keys.add(e.key));
+  element.addEventListener("keyup", (e) => keys.delete(e.key));
+
+  return keys;
+}
+
+function addMouseHandler(element: HTMLElement) {
+  const mouse = new float2<Pixels>(0, 0);
+
+  element.addEventListener("mousemove", (e) => {
+    mouse.x += e.movementX;
+    mouse.y += e.movementY;
+  });
+
+  return () => {
+    const { x, y } = mouse;
+    mouse.x = 0;
+    mouse.y = 0;
+
+    return new float2(x, y);
+  };
+}
+
 export function modelDemo(
   ctx: CanvasRenderingContext2D,
   models: Model[],
-  fov: Radians = 1,
+  fov: Degrees = 60,
 ) {
   const rng = new MathRNG();
   const triangleColours = enumerate(75).map(() =>
@@ -134,27 +161,61 @@ export function modelDemo(
   );
   const { width, height } = ctx.canvas;
   const renderTarget = new RenderTarget(width, height);
-  const transform = new Transform();
+  const camera = new Camera(fov);
+  const keys = addKeyHandler(document.body);
+  const getMouseUpdate = addMouseHandler(document.body);
 
-  const vertexToScreen = (v: float3) => {
+  const vertexToScreen = (v: float3, transform: Transform) => {
     const size = renderTarget.size;
     const world = transform.toWorldPoint(v);
+    const view = camera.transform.toWorldPoint(world);
 
-    const screenHeightWorld = Math.tan(fov / 2) * 2;
-    const pixelsPerWorldUnit = size.y / screenHeightWorld / world.z;
+    const screenHeightWorld = Math.tan(camera.fov / 2) * 2;
+    const pixelsPerWorldUnit = size.y / screenHeightWorld / view.z;
 
-    const pixelOffset = world.xy.mul(pixelsPerWorldUnit);
+    const pixelOffset = view.xy.mul(pixelsPerWorldUnit);
     const screen = size.mul(0.5).add(pixelOffset);
-    return new float3(screen.x, screen.y, world.z);
+    return new float3(screen.x, screen.y, view.z);
+  };
+
+  const mouseSensitivity = 0.0002;
+  const camSpeed = 1.5;
+  const minPitch = toRadians(-85);
+  const maxPitch = toRadians(85);
+  const update = (delta: Milliseconds) => {
+    renderTarget.clear();
+
+    const mouseDelta = getMouseUpdate().mul(mouseSensitivity * delta);
+    camera.transform.pitch = clamp(
+      camera.transform.pitch - mouseDelta.y,
+      minPitch,
+      maxPitch,
+    );
+    camera.transform.yaw -= mouseDelta.x;
+
+    let moveDelta = float3.zero;
+    const { i: right, k: forward } = camera.transform.getBasisVectors();
+
+    if (keys.has("w")) moveDelta = moveDelta.sub(forward);
+    if (keys.has("s")) moveDelta = moveDelta.add(forward);
+    if (keys.has("a")) moveDelta = moveDelta.add(right);
+    if (keys.has("d")) moveDelta = moveDelta.sub(right);
+
+    camera.transform.position = camera.transform.position.add(
+      moveDelta.normalize().mul(camSpeed * delta),
+    );
+    camera.transform.position.y = 1;
   };
 
   const render = () => {
-    renderTarget.clear();
-
-    let ci = 0;
+    let ci = -1;
     for (const model of models) {
       for (const triangle of model.triangles) {
-        const [a, b, c] = triangle.vertices.map(vertexToScreen);
+        ci = (ci + 1) % triangleColours.length;
+        const [a, b, c] = triangle.vertices.map((v) =>
+          vertexToScreen(v, model.transform),
+        );
+        if (a.z <= 0 || b.z <= 0 || c.z <= 0) continue;
 
         const minX = Math.min(a.x, b.x, c.x);
         const minY = Math.min(a.y, b.y, c.y);
@@ -180,21 +241,20 @@ export function modelDemo(
               renderTarget.plotAtDepth(x, y, depth, triangleColours[ci]);
             }
           }
-
-        ci = (ci + 1) % triangleColours.length;
       }
     }
 
     ctx.putImageData(renderTarget.data, 0, 0);
   };
 
-  const tick = () => {
+  let time: Milliseconds = performance.now();
+  const tick = (newTime: DOMHighResTimeStamp) => {
+    const delta = newTime - time;
+    time = newTime;
+
+    update(delta);
     render();
     requestAnimationFrame(tick);
-
-    transform.yaw += 0.01;
-    transform.pitch -= 0.005;
   };
-
   requestAnimationFrame(tick);
 }

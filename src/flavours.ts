@@ -4,6 +4,8 @@ interface Flavouring<FlavourT> {
 }
 type Flavour<T, FlavourT> = T & Flavouring<FlavourT>;
 
+export type Degrees = Flavour<number, "Degrees">;
 export type Intensity = Flavour<number, "Intensity">;
+export type Milliseconds = Flavour<number, "Milliseconds">;
 export type Pixels = Flavour<number, "Pixels">;
 export type Radians = Flavour<number, "Radians">;
