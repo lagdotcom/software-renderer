@@ -179,7 +179,7 @@ export function modelDemo(
   };
 
   const mouseSensitivity = 0.0002;
-  const camSpeed = 1.5;
+  const camSpeed = 0.8;
   const minPitch = toRadians(-85);
   const maxPitch = toRadians(85);
   const update = (delta: Milliseconds) => {
@@ -194,17 +194,19 @@ export function modelDemo(
     camera.transform.yaw -= mouseDelta.x;
 
     let moveDelta = float3.zero;
-    const { i: right, k: forward } = camera.transform.getBasisVectors();
+    const { i: right, j: up, k: forward } = camera.transform.getBasisVectors();
 
     if (keys.has("w")) moveDelta = moveDelta.sub(forward);
     if (keys.has("s")) moveDelta = moveDelta.add(forward);
     if (keys.has("a")) moveDelta = moveDelta.add(right);
     if (keys.has("d")) moveDelta = moveDelta.sub(right);
+    if (keys.has("q")) moveDelta = moveDelta.add(up);
+    if (keys.has("e")) moveDelta = moveDelta.sub(up);
 
     camera.transform.position = camera.transform.position.add(
       moveDelta.normalize().mul(camSpeed * delta),
     );
-    camera.transform.position.y = 1;
+    // camera.transform.position.y = 1;
   };
 
   const render = () => {
