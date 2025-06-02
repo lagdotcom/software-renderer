@@ -11,7 +11,6 @@ import Model from "./lib/Model";
 import { MathRNG } from "./lib/Random";
 import RenderTarget from "./lib/RenderTarget";
 import Transform from "./lib/Transform";
-import cubeObj from "./res/cube.obj";
 import { clamp } from "./tools/clamp";
 import enumerate from "./tools/enumerate";
 
@@ -68,7 +67,7 @@ export function bouncyTriangles(ctx: CanvasRenderingContext2D, count = 150) {
 
       for (let y = startY; y <= endY; y++)
         for (let x = startX; x <= endX; x++)
-          if (pointInTriangle(a, b, c, new float2(x, y)))
+          if (pointInTriangle(a, b, c, new float2(x, y))[0])
             image[y][x] = triangle.colour;
     }
 
@@ -124,16 +123,18 @@ function toImageData(image: float3<Intensity>[][]) {
   return new ImageData(bytes, width, height);
 }
 
-export function cubeDemo(ctx: CanvasRenderingContext2D, fov: Radians = 1) {
+export function modelDemo(
+  ctx: CanvasRenderingContext2D,
+  models: Model[],
+  fov: Radians = 1,
+) {
   const rng = new MathRNG();
   const triangleColours = enumerate(75).map(() =>
     float3.random<Intensity>(rng, 1, 1, 1),
   );
-  const model = new Model(cubeObj);
   const { width, height } = ctx.canvas;
   const renderTarget = new RenderTarget(width, height);
   const transform = new Transform();
-  transform.position.z = 5;
 
   const vertexToScreen = (v: float3) => {
     const size = renderTarget.size;
@@ -143,32 +144,45 @@ export function cubeDemo(ctx: CanvasRenderingContext2D, fov: Radians = 1) {
     const pixelsPerWorldUnit = size.y / screenHeightWorld / world.z;
 
     const pixelOffset = world.xy.mul(pixelsPerWorldUnit);
-    return size.mul(0.5).add(pixelOffset);
+    const screen = size.mul(0.5).add(pixelOffset);
+    return new float3(screen.x, screen.y, world.z);
   };
 
   const render = () => {
     renderTarget.clear();
 
     let ci = 0;
-    for (const triangle of model.triangles) {
-      const [a, b, c] = triangle.vertices.map(vertexToScreen);
+    for (const model of models) {
+      for (const triangle of model.triangles) {
+        const [a, b, c] = triangle.vertices.map(vertexToScreen);
 
-      const minX = Math.min(a.x, b.x, c.x);
-      const minY = Math.min(a.y, b.y, c.y);
-      const maxX = Math.max(a.x, b.x, c.x);
-      const maxY = Math.max(a.y, b.y, c.y);
+        const minX = Math.min(a.x, b.x, c.x);
+        const minY = Math.min(a.y, b.y, c.y);
+        const maxX = Math.max(a.x, b.x, c.x);
+        const maxY = Math.max(a.y, b.y, c.y);
 
-      const startX = clamp(Math.floor(minX), 0, width - 1);
-      const startY = clamp(Math.floor(minY), 0, height - 1);
-      const endX = clamp(Math.ceil(maxX), 0, width - 1);
-      const endY = clamp(Math.ceil(maxY), 0, height - 1);
+        const startX = clamp(Math.floor(minX), 0, width - 1);
+        const startY = clamp(Math.floor(minY), 0, height - 1);
+        const endX = clamp(Math.ceil(maxX), 0, width - 1);
+        const endY = clamp(Math.ceil(maxY), 0, height - 1);
 
-      for (let y = startY; y <= endY; y++)
-        for (let x = startX; x <= endX; x++)
-          if (pointInTriangle(a, b, c, new float2(x, y)))
-            renderTarget.plot(x, y, triangleColours[ci]);
+        for (let y = startY; y <= endY; y++)
+          for (let x = startX; x <= endX; x++) {
+            const [inside, weights] = pointInTriangle(
+              a.xy,
+              b.xy,
+              c.xy,
+              new float2(x, y),
+            );
+            if (inside) {
+              const depths = new float3(a.z, b.z, c.z);
+              const depth = float3.dot(depths, weights);
+              renderTarget.plotAtDepth(x, y, depth, triangleColours[ci]);
+            }
+          }
 
-      ci = (ci + 1) % triangleColours.length;
+        ci = (ci + 1) % triangleColours.length;
+      }
     }
 
     ctx.putImageData(renderTarget.data, 0, 0);

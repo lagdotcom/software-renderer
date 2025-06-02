@@ -38,7 +38,7 @@ export function createTestImage02(
   const [a, b, c] = unscaled.map((p) => p.mul(width, height));
   return createImage(width, height, (x, y) => {
     const p = new float2(x, y);
-    const inside = pointInTriangle(a, b, c, p);
+    const [inside] = pointInTriangle(a, b, c, p);
     return inside ? new float3(0, 0, 1) : new float3(0, 0, 0);
   });
 }

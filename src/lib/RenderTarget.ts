@@ -3,13 +3,15 @@ import float2 from "./float2";
 import float3 from "./float3";
 
 export default class RenderTarget {
-  buffer: Uint8ClampedArray;
+  colour: Uint8ClampedArray;
+  depth: Float32Array;
 
   constructor(
     public width: Pixels,
     public height: Pixels,
   ) {
-    this.buffer = new Uint8ClampedArray(width * height * 4);
+    this.colour = new Uint8ClampedArray(width * height * 4);
+    this.depth = new Float32Array(width * height);
   }
 
   get size() {
@@ -17,18 +19,36 @@ export default class RenderTarget {
   }
 
   get data() {
-    return new ImageData(this.buffer, this.width, this.height);
+    return new ImageData(this.colour, this.width, this.height);
   }
 
   clear() {
-    this.buffer.fill(0);
+    this.colour.fill(0);
+    this.depth.fill(Infinity);
   }
 
   plot(x: Pixels, y: Pixels, { r, g, b }: float3<Intensity>) {
     const i = (y * this.width + x) * 4;
-    this.buffer[i] = r * 255;
-    this.buffer[i + 1] = g * 255;
-    this.buffer[i + 2] = b * 255;
-    this.buffer[i + 3] = 255;
+    this.colour[i] = r * 255;
+    this.colour[i + 1] = g * 255;
+    this.colour[i + 2] = b * 255;
+    this.colour[i + 3] = 255;
+  }
+
+  plotAtDepth(
+    x: Pixels,
+    y: Pixels,
+    depth: number,
+    { r, g, b }: float3<Intensity>,
+  ) {
+    const di = y * this.width + x;
+    if (depth > this.depth[di]) return;
+    this.depth[di] = depth;
+
+    const ci = di * 4;
+    this.colour[ci] = r * 255;
+    this.colour[ci + 1] = g * 255;
+    this.colour[ci + 2] = b * 255;
+    this.colour[ci + 3] = 255;
   }
 }

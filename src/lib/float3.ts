@@ -1,6 +1,12 @@
 import float2 from "./float2";
 import Random from "./Random";
 
+export interface float3like<T extends number = number> {
+  x: T;
+  y: T;
+  z: T;
+}
+
 export default class float3<T extends number = number> {
   constructor(
     public x: T,
@@ -10,6 +16,10 @@ export default class float3<T extends number = number> {
 
   static random<T extends number>(rng: Random, x: T, y: T, z: T) {
     return new float3(rng.upTo(x), rng.upTo(y), rng.upTo(z));
+  }
+
+  static dot(a: float3like, b: float3like) {
+    return a.x * b.x + a.y * b.y + a.z * b.z;
   }
 
   get r() {
@@ -37,7 +47,7 @@ export default class float3<T extends number = number> {
     return new float2(this.x, this.y);
   }
 
-  add(o: float3) {
+  add(o: float3like) {
     return new float3(this.x + o.x, this.y + o.y, this.z + o.z);
   }
 

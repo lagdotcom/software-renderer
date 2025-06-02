@@ -3,6 +3,9 @@
 import { readFileSync } from "fs";
 import path from "path";
 
+/**
+ * @param {string} raw
+ */
 export function parseObj(raw) {
   const vertices = [];
   const textureCoords = [];
@@ -34,25 +37,44 @@ export function parseObj(raw) {
       }
 
       case "f": {
-        if (args.length !== 3)
-          throw new Error(
-            `face has ${args.length} elements, figure out triangle fans`
-          );
-
-        const triangle = {
+        const face = {
           vertexIndices: [],
           textureIndices: [],
           normalIndices: [],
         };
 
-        for (const element of args) {
-          const [vertex, texture, normal] = element.split("/").map(Number);
-          triangle.vertexIndices.push(vertex - 1);
-          if (texture) triangle.textureIndices.push(texture - 1);
-          if (normal) triangle.normalIndices.push(normal - 1);
+        const add = (vertex, texture, normal) => {
+          face.vertexIndices.push(vertex - 1);
+          if (texture) face.textureIndices.push(texture - 1);
+          if (normal) face.normalIndices.push(normal - 1);
+        };
+
+        const reuse = (offset) => {
+          const vertex = face.vertexIndices.at(offset);
+          const texture = face.textureIndices.at(offset);
+          const normal = face.normalIndices.at(offset);
+
+          face.vertexIndices.push(vertex);
+          if (typeof texture !== "undefined") face.textureIndices.push(texture);
+          if (typeof normal !== "undefined") face.normalIndices.push(normal);
+        };
+
+        for (const [i, group] of args.entries()) {
+          const [vertex, texture, normal] = group.split("/").map(Number);
+          if (i >= 3) {
+            reuse(0);
+            reuse(-2);
+          }
+          add(vertex, texture, normal);
         }
 
-        triangles.push(triangle);
+        for (let i = 0; i < face.vertexIndices.length; i += 3) {
+          triangles.push({
+            vertexIndices: face.vertexIndices.slice(i, i + 3),
+            textureIndices: face.textureIndices.slice(i, i + 3),
+            normalIndices: face.normalIndices.slice(i, i + 3),
+          });
+        }
       }
     }
   }
@@ -60,6 +82,7 @@ export function parseObj(raw) {
   return { vertices, textureCoords, vertexNormals, triangles };
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const ObjModule = (options = {}) => ({
   name: "WavefrontObj",
 

@@ -40,4 +40,22 @@ export default class Model {
       }),
     );
   }
+
+  private updateTriangles() {
+    this.triangles = this.triangles.map((t) => ({
+      ...t,
+      vertices: t.vertexIndices.map((i) => this.vertices[i]),
+    }));
+    return this;
+  }
+
+  translate(x = 0, y = 0, z = 0) {
+    this.vertices = this.vertices.map((v) => v.add({ x, y, z }));
+    return this.updateTriangles();
+  }
+
+  scale(x: number, y = x, z = y) {
+    this.vertices = this.vertices.map((v) => v.mul(x, y, z));
+    return this.updateTriangles();
+  }
 }
