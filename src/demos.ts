@@ -191,7 +191,7 @@ export function modelDemo(
   const vertexToScreen = (v: float3, transform: Transform) => {
     const size = renderTarget.size;
     const world = transform.toWorldPoint(v);
-    const view = camera.transform.toWorldPoint(world);
+    const view = camera.transform.toLocalPoint(world);
 
     const screenHeightWorld = tan(camera.fov / 2) * 2;
     const pixelsPerWorldUnit = size.y / screenHeightWorld / view.z;
@@ -219,12 +219,12 @@ export function modelDemo(
     let moveDelta = float3.zero;
     const { i: right, j: up, k: forward } = camera.transform.getBasisVectors();
 
-    if (keys.has("w")) moveDelta = moveDelta.sub(forward);
-    if (keys.has("s")) moveDelta = moveDelta.add(forward);
-    if (keys.has("a")) moveDelta = moveDelta.add(right);
-    if (keys.has("d")) moveDelta = moveDelta.sub(right);
-    if (keys.has("q")) moveDelta = moveDelta.add(up);
-    if (keys.has("e")) moveDelta = moveDelta.sub(up);
+    if (keys.has("w")) moveDelta = moveDelta.add(forward);
+    if (keys.has("s")) moveDelta = moveDelta.sub(forward);
+    if (keys.has("d")) moveDelta = moveDelta.add(right);
+    if (keys.has("a")) moveDelta = moveDelta.sub(right);
+    if (keys.has("e")) moveDelta = moveDelta.add(up);
+    if (keys.has("q")) moveDelta = moveDelta.sub(up);
 
     camera.transform.position = camera.transform.position.add(
       moveDelta.normalize().mul(camSpeed * delta),
@@ -265,7 +265,7 @@ export function modelDemo(
             );
             if (inside) {
               const depths = new float3(a.z, b.z, c.z);
-              const depth = float3.dot(depths, weights);
+              const depth = 1 / float3.dot(depths.reciprocal(), weights);
               renderTarget.plotAtDepth(x, y, depth, triangleColours[ci]);
             }
           }

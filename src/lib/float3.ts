@@ -65,6 +65,10 @@ export default class float3<T extends number = number> {
     return new float3(x / magnitude, y / magnitude, z / magnitude);
   }
 
+  reciprocal() {
+    return new float3(1 / this.x, 1 / this.y, 1 / this.z);
+  }
+
   add(o: float3like) {
     return new float3(this.x + o.x, this.y + o.y, this.z + o.z);
   }

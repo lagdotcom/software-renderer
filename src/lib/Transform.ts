@@ -13,14 +13,14 @@ export default class Transform {
     return `T[pos=${this.position.toString()} yaw=${toDegrees(this.yaw).toFixed(2)} pitch=${toDegrees(this.pitch).toFixed(2)}]`;
   }
 
-  toWorldPoint(p: float3) {
+  toWorldPoint(localPoint: float3) {
     const { i, j, k } = this.getBasisVectors();
-    return this.transformVector(i, j, k, p).add(this.position);
+    return this.transformVector(i, j, k, localPoint).add(this.position);
   }
 
-  toLocalPoint(p: float3) {
+  toLocalPoint(worldPoint: float3) {
     const { i, j, k } = this.getInverseBasisVectors();
-    return this.transformVector(i, j, k, p).sub(this.position);
+    return this.transformVector(i, j, k, worldPoint.sub(this.position));
   }
 
   getBasisVectors() {

@@ -60,7 +60,9 @@ export default class Model {
   }
 
   translate(x = 0, y = 0, z = 0) {
-    this.transform.position = this.transform.position.add({ x, y, z });
+    this.transform.position.x += x;
+    this.transform.position.y += y;
+    this.transform.position.z += z;
     return this;
   }
 
