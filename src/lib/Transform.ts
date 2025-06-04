@@ -1,7 +1,6 @@
 import { Radians } from "../flavours";
 import float3 from "./float3";
-
-const { cos, sin } = Math;
+import { cos, sin, toDegrees } from "./maths";
 
 export default class Transform {
   constructor(
@@ -9,6 +8,10 @@ export default class Transform {
     public yaw: Radians = 0,
     public pitch: Radians = 0,
   ) {}
+
+  toString() {
+    return `T[pos=${this.position.toString()} yaw=${toDegrees(this.yaw).toFixed(2)} pitch=${toDegrees(this.pitch).toFixed(2)}]`;
+  }
 
   toWorldPoint(p: float3) {
     const { i, j, k } = this.getBasisVectors();

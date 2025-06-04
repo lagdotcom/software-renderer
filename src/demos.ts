@@ -7,7 +7,15 @@ import {
   createTestImage01,
   createTestImage02,
 } from "./lib/helpers";
-import { pointInTriangle, toRadians } from "./lib/maths";
+import {
+  ceil,
+  floor,
+  max,
+  min,
+  pointInTriangle,
+  tan,
+  toRadians,
+} from "./lib/maths";
 import Model from "./lib/Model";
 import { MathRNG } from "./lib/Random";
 import RenderTarget from "./lib/RenderTarget";
@@ -56,15 +64,15 @@ export function bouncyTriangles(ctx: CanvasRenderingContext2D, count = 150) {
     for (const triangle of triangles) {
       const [a, b, c] = triangle.points;
 
-      const minX = Math.min(a.x, b.x, c.x);
-      const minY = Math.min(a.y, b.y, c.y);
-      const maxX = Math.max(a.x, b.x, c.x);
-      const maxY = Math.max(a.y, b.y, c.y);
+      const minX = min(a.x, b.x, c.x);
+      const minY = min(a.y, b.y, c.y);
+      const maxX = max(a.x, b.x, c.x);
+      const maxY = max(a.y, b.y, c.y);
 
-      const startX = clamp(Math.floor(minX), 0, width - 1);
-      const startY = clamp(Math.floor(minY), 0, height - 1);
-      const endX = clamp(Math.ceil(maxX), 0, width - 1);
-      const endY = clamp(Math.ceil(maxY), 0, height - 1);
+      const startX = clamp(floor(minX), 0, width - 1);
+      const startY = clamp(floor(minY), 0, height - 1);
+      const endX = clamp(ceil(maxX), 0, width - 1);
+      const endY = clamp(ceil(maxY), 0, height - 1);
 
       for (let y = startY; y <= endY; y++)
         for (let x = startX; x <= endX; x++)
@@ -124,7 +132,7 @@ function toImageData(image: float3<Intensity>[][]) {
   return new ImageData(bytes, width, height);
 }
 
-function addKeyHandler(element: HTMLElement) {
+function addKeyHandler(element: HTMLElement = document.body) {
   const keys = new Set<string>();
 
   element.addEventListener("keydown", (e) => keys.add(e.key));
@@ -133,7 +141,7 @@ function addKeyHandler(element: HTMLElement) {
   return keys;
 }
 
-function addMouseHandler(element: HTMLElement) {
+function addMouseHandler(element: HTMLElement = document.body) {
   const mouse = new float2<Pixels>(0, 0);
 
   element.addEventListener("mousemove", (e) => {
@@ -150,6 +158,20 @@ function addMouseHandler(element: HTMLElement) {
   };
 }
 
+function addDebugBox(parent: HTMLElement = document.body) {
+  const box = document.createElement("textarea");
+  box.readOnly = true;
+  box.cols = 80;
+  box.rows = 10;
+  parent.append(box);
+
+  const clear = () => (box.innerHTML = "");
+  const add = (line: string) =>
+    (box.innerHTML = (box.innerHTML + "\n" + line).trim());
+
+  return { clear, add };
+}
+
 export function modelDemo(
   ctx: CanvasRenderingContext2D,
   models: Model[],
@@ -162,15 +184,16 @@ export function modelDemo(
   const { width, height } = ctx.canvas;
   const renderTarget = new RenderTarget(width, height);
   const camera = new Camera(fov);
-  const keys = addKeyHandler(document.body);
-  const getMouseUpdate = addMouseHandler(document.body);
+  const keys = addKeyHandler();
+  const getMouseUpdate = addMouseHandler();
+  const debug = addDebugBox();
 
   const vertexToScreen = (v: float3, transform: Transform) => {
     const size = renderTarget.size;
     const world = transform.toWorldPoint(v);
     const view = camera.transform.toWorldPoint(world);
 
-    const screenHeightWorld = Math.tan(camera.fov / 2) * 2;
+    const screenHeightWorld = tan(camera.fov / 2) * 2;
     const pixelsPerWorldUnit = size.y / screenHeightWorld / view.z;
 
     const pixelOffset = view.xy.mul(pixelsPerWorldUnit);
@@ -207,11 +230,14 @@ export function modelDemo(
       moveDelta.normalize().mul(camSpeed * delta),
     );
     // camera.transform.position.y = 1;
+    debug.add(camera.toString());
   };
 
   const render = () => {
     let ci = -1;
     for (const model of models) {
+      debug.add(model.toString());
+
       for (const triangle of model.triangles) {
         ci = (ci + 1) % triangleColours.length;
         const [a, b, c] = triangle.vertices.map((v) =>
@@ -219,15 +245,15 @@ export function modelDemo(
         );
         if (a.z <= 0 || b.z <= 0 || c.z <= 0) continue;
 
-        const minX = Math.min(a.x, b.x, c.x);
-        const minY = Math.min(a.y, b.y, c.y);
-        const maxX = Math.max(a.x, b.x, c.x);
-        const maxY = Math.max(a.y, b.y, c.y);
+        const minX = min(a.x, b.x, c.x);
+        const minY = min(a.y, b.y, c.y);
+        const maxX = max(a.x, b.x, c.x);
+        const maxY = max(a.y, b.y, c.y);
 
-        const startX = clamp(Math.floor(minX), 0, width - 1);
-        const startY = clamp(Math.floor(minY), 0, height - 1);
-        const endX = clamp(Math.ceil(maxX), 0, width - 1);
-        const endY = clamp(Math.ceil(maxY), 0, height - 1);
+        const startX = clamp(floor(minX), 0, width - 1);
+        const startY = clamp(floor(minY), 0, height - 1);
+        const endX = clamp(ceil(maxX), 0, width - 1);
+        const endY = clamp(ceil(maxY), 0, height - 1);
 
         for (let y = startY; y <= endY; y++)
           for (let x = startX; x <= endX; x++) {
@@ -254,6 +280,7 @@ export function modelDemo(
     const delta = newTime - time;
     time = newTime;
 
+    debug.clear();
     update(delta);
     render();
     requestAnimationFrame(tick);

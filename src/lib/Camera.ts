@@ -1,5 +1,5 @@
 import { Degrees, Radians } from "../flavours";
-import { toRadians } from "./maths";
+import { toDegrees, toRadians } from "./maths";
 import Transform from "./Transform";
 
 export default class Camera {
@@ -10,5 +10,9 @@ export default class Camera {
     public transform = new Transform(),
   ) {
     this.fov = toRadians(fov);
+  }
+
+  toString() {
+    return `CAMERA fov=${toDegrees(this.fov)} ${this.transform.toString()}`;
   }
 }

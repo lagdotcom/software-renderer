@@ -1,3 +1,4 @@
+import { Radians } from "../flavours";
 import float2 from "./float2";
 import float3 from "./float3";
 import Transform from "./Transform";
@@ -27,6 +28,7 @@ export default class Model {
   triangles: Triangle[];
 
   constructor(
+    public name: string,
     json: ModelJson,
     public transform = new Transform(),
   ) {
@@ -45,6 +47,10 @@ export default class Model {
     );
   }
 
+  toString() {
+    return `${this.name} ${this.transform.toString()}`;
+  }
+
   private updateTriangles() {
     this.triangles = this.triangles.map((t) => ({
       ...t,
@@ -61,5 +67,13 @@ export default class Model {
   scale(x: number, y = x, z = y) {
     this.vertices = this.vertices.map((v) => v.mul(x, y, z));
     return this.updateTriangles();
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  rotate(x: Radians = 0, y: Radians = 0, z: Radians = 0) {
+    this.transform.yaw += x;
+    this.transform.pitch += y;
+    // TODO roll
+    return this;
   }
 }

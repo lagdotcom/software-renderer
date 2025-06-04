@@ -2,6 +2,8 @@ import { Degrees, Radians } from "../flavours";
 import float2 from "./float2";
 import float3 from "./float3";
 
+export const { min, max, cos, sin, tan, ceil, floor, sqrt, PI } = Math;
+
 export function pointOnRightSideOfLine(a: float2, b: float2, p: float2) {
   const ap = p.sub(a);
   const abPerp = b.sub(a).perpendicular();
@@ -30,8 +32,12 @@ export function pointInTriangle(a: float2, b: float2, c: float2, p: float2) {
   return [inTri && totalArea > 0, weights] as const;
 }
 
-const twoPi = Math.PI * 2;
+export const TWO_PI = Math.PI * 2;
 
 export function toRadians(a: Degrees): Radians {
-  return (a / 360) * twoPi;
+  return (a / 360) * TWO_PI;
+}
+
+export function toDegrees(a: Radians): Degrees {
+  return (a / TWO_PI) * 360;
 }

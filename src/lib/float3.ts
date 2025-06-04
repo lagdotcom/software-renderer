@@ -1,4 +1,5 @@
 import float2 from "./float2";
+import { sqrt } from "./maths";
 import Random from "./Random";
 
 export interface float3like<T extends number = number> {
@@ -22,6 +23,10 @@ export default class float3<T extends number = number> {
 
   static dot(a: float3like, b: float3like) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
+  }
+
+  toString() {
+    return `{${this.x.toFixed(2)} ${this.y.toFixed(2)} ${this.z.toFixed(2)}}`;
   }
 
   get r() {
@@ -50,7 +55,7 @@ export default class float3<T extends number = number> {
   }
 
   get magnitude() {
-    return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+    return sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
   }
 
   normalize() {
