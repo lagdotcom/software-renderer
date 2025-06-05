@@ -28,6 +28,6 @@ const config = {
   define,
   // minify: true,
   plugins: [ObjModule()],
-  loader: {},
+  loader: { ".png": "file" },
 };
 export default config;

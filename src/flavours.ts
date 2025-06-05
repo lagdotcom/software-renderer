@@ -9,3 +9,4 @@ export type Intensity = Flavour<number, "Intensity">;
 export type Milliseconds = Flavour<number, "Milliseconds">;
 export type Pixels = Flavour<number, "Pixels">;
 export type Radians = Flavour<number, "Radians">;
+export type TextureUrl = Flavour<string, "TextureUrl">;

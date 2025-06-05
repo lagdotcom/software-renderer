@@ -11,6 +11,8 @@ export function parseObj(raw) {
   const textureCoords = [];
   const vertexNormals = [];
   const triangles = [];
+  var materialFile = undefined;
+  var material = undefined;
 
   for (const lineRaw of raw.split("\n")) {
     const line = lineRaw.split("#")[0].trim();
@@ -35,6 +37,14 @@ export function parseObj(raw) {
         vertexNormals.push([x, y, z]);
         break;
       }
+
+      case "mtllib":
+        materialFile = args.join("#");
+        break;
+
+      case "usemtl":
+        material = args.join("#");
+        break;
 
       case "f": {
         const face = {
@@ -70,6 +80,7 @@ export function parseObj(raw) {
 
         for (let i = 0; i < face.vertexIndices.length; i += 3) {
           triangles.push({
+            material,
             vertexIndices: face.vertexIndices.slice(i, i + 3),
             textureIndices: face.textureIndices.slice(i, i + 3),
             normalIndices: face.normalIndices.slice(i, i + 3),
@@ -79,7 +90,7 @@ export function parseObj(raw) {
     }
   }
 
-  return { vertices, textureCoords, vertexNormals, triangles };
+  return { materialFile, vertices, textureCoords, vertexNormals, triangles };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

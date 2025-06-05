@@ -183,6 +183,7 @@ export function modelDemo(
   );
   const { width, height } = ctx.canvas;
   const renderTarget = new RenderTarget(width, height);
+  const screenCentre = renderTarget.size.div(2);
   const camera = new Camera(fov);
   const keys = addKeyHandler();
   const getMouseUpdate = addMouseHandler();
@@ -197,7 +198,7 @@ export function modelDemo(
     const pixelsPerWorldUnit = size.y / screenHeightWorld / view.z;
 
     const pixelOffset = view.xy.mul(pixelsPerWorldUnit);
-    const screen = size.mul(0.5).add(pixelOffset);
+    const screen = screenCentre.add(pixelOffset);
     return new float3(screen.x, screen.y, view.z);
   };
 
@@ -266,7 +267,31 @@ export function modelDemo(
             if (inside) {
               const depths = new float3(a.z, b.z, c.z);
               const depth = 1 / float3.dot(depths.reciprocal(), weights);
-              renderTarget.plotAtDepth(x, y, depth, triangleColours[ci]);
+              if (renderTarget.depthTest(x, y, depth)) continue;
+
+              let texCoord = float2.zero;
+              if (triangle.textureCoords.length >= 2) {
+                texCoord = texCoord
+                  .add(triangle.textureCoords[0])
+                  .div(depths.x)
+                  .mul(weights.x);
+                texCoord = texCoord
+                  .add(triangle.textureCoords[1])
+                  .div(depths.y)
+                  .mul(weights.y);
+                texCoord = texCoord
+                  .add(triangle.textureCoords[2])
+                  .div(depths.z)
+                  .mul(weights.z);
+                texCoord = texCoord.mul(depth);
+              }
+
+              renderTarget.plotAtDepth(
+                x,
+                y,
+                depth,
+                model.shader.getPixelColour(texCoord, triangle),
+              );
             }
           }
       }
@@ -286,4 +311,7 @@ export function modelDemo(
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any).models = models;
 }

@@ -1,3 +1,4 @@
+import { clamp } from "../tools/clamp";
 import Random from "./Random";
 
 export interface float2like<T extends number = number> {
@@ -11,6 +12,8 @@ export default class float2<T extends number = number> {
     public y: T,
   ) {}
 
+  static zero = new float2<number>(0, 0);
+
   static random<T extends number>(rng: Random, width: T, height: T) {
     return new float2(rng.upTo(width), rng.upTo(height));
   }
@@ -23,6 +26,11 @@ export default class float2<T extends number = number> {
     return new float2<T>(this.y, -this.x as T);
   }
 
+  // TODO check this
+  saturate() {
+    return new float2(clamp<number>(this.x, 0, 1), clamp<number>(this.y, 0, 1));
+  }
+
   add(other: float2like) {
     return new float2(this.x + other.x, this.y + other.y);
   }
@@ -33,5 +41,9 @@ export default class float2<T extends number = number> {
 
   mul(x: number, y = x) {
     return new float2(this.x * x, this.y * y);
+  }
+
+  div(x: number, y = x) {
+    return new float2(this.x / x, this.y / y);
   }
 }

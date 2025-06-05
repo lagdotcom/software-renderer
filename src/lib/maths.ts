@@ -2,7 +2,7 @@ import { Degrees, Radians } from "../flavours";
 import float2 from "./float2";
 import float3 from "./float3";
 
-export const { min, max, cos, sin, tan, ceil, floor, sqrt, PI } = Math;
+export const { min, max, cos, sin, tan, ceil, floor, sqrt, round, PI } = Math;
 
 export function pointOnRightSideOfLine(a: float2, b: float2, p: float2) {
   const ap = p.sub(a);

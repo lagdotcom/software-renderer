@@ -1,13 +1,16 @@
 import { Radians } from "../flavours";
 import float2 from "./float2";
 import float3 from "./float3";
+import Shader from "./Shader";
 import Transform from "./Transform";
 
 export interface ModelJson {
+  materialFile?: string;
   vertices: [x: number, y: number, z: number, w: number][];
   textureCoords: [u: number, v: number][];
   vertexNormals: [x: number, y: number, z: number][];
   triangles: {
+    material?: string;
     vertexIndices: number[];
     textureIndices: number[];
     normalIndices: number[];
@@ -15,8 +18,11 @@ export interface ModelJson {
 }
 
 export interface Triangle {
+  index: number;
+  material?: string;
   vertices: float3[];
   vertexIndices: number[];
+  textureCoords: float2[];
   textureIndices: number[];
   normalIndices: number[];
 }
@@ -30,6 +36,7 @@ export default class Model {
   constructor(
     public name: string,
     json: ModelJson,
+    public shader: Shader,
     public transform = new Transform(),
   ) {
     this.vertices = json.vertices.map(([x, y, z]) => new float3(x, y, z));
@@ -37,14 +44,12 @@ export default class Model {
     this.vertexNormals = json.vertexNormals.map(
       ([x, y, z]) => new float3(x, y, z),
     );
-    this.triangles = json.triangles.map(
-      ({ vertexIndices, textureIndices, normalIndices }) => ({
-        vertexIndices,
-        textureIndices,
-        normalIndices,
-        vertices: vertexIndices.map((i) => this.vertices[i]),
-      }),
-    );
+    this.triangles = json.triangles.map((t, index) => ({
+      ...t,
+      index,
+      vertices: t.vertexIndices.map((i) => this.vertices[i]),
+      textureCoords: t.textureIndices.map((i) => this.textureCoords[i]),
+    }));
   }
 
   toString() {

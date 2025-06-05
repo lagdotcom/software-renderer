@@ -80,4 +80,8 @@ export default class float3<T extends number = number> {
   mul(x: number, y = x, z = y) {
     return new float3(this.x * x, this.y * y, this.z * z);
   }
+
+  div(x: number, y = x, z = y) {
+    return new float3(this.x / x, this.y / y, this.z / z);
+  }
 }
