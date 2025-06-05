@@ -5,6 +5,7 @@ import { cos, sin, toDegrees } from "./maths";
 export default class Transform {
   constructor(
     public position: float3 = new float3(0, 0, 0),
+    public scale: float3 = new float3(1, 1, 1),
     public yaw: Radians = 0,
     public pitch: Radians = 0,
   ) {}
@@ -14,13 +15,20 @@ export default class Transform {
   }
 
   toWorldPoint(localPoint: float3) {
-    const { i, j, k } = this.getBasisVectors();
+    let { i, j, k } = this.getBasisVectors();
+    i = i.mul(this.scale.x);
+    j = j.mul(this.scale.y);
+    k = k.mul(this.scale.z);
     return this.transformVector(i, j, k, localPoint).add(this.position);
   }
 
   toLocalPoint(worldPoint: float3) {
     const { i, j, k } = this.getInverseBasisVectors();
-    return this.transformVector(i, j, k, worldPoint.sub(this.position));
+    return this.transformVector(i, j, k, worldPoint.sub(this.position)).div(
+      this.scale.x,
+      this.scale.y,
+      this.scale.z,
+    );
   }
 
   getBasisVectors() {

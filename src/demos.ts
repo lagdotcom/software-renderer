@@ -270,27 +270,39 @@ export function modelDemo(
               if (renderTarget.depthTest(x, y, depth)) continue;
 
               let texCoord = float2.zero;
-              if (triangle.textureCoords.length >= 2) {
+              if (triangle.textureCoords.length >= 3)
                 texCoord = texCoord
-                  .add(triangle.textureCoords[0])
-                  .div(depths.x)
-                  .mul(weights.x);
-                texCoord = texCoord
-                  .add(triangle.textureCoords[1])
-                  .div(depths.y)
-                  .mul(weights.y);
-                texCoord = texCoord
-                  .add(triangle.textureCoords[2])
-                  .div(depths.z)
-                  .mul(weights.z);
-                texCoord = texCoord.mul(depth);
-              }
+                  .add(
+                    triangle.textureCoords[0]
+                      .abs()
+                      .div(depths.x)
+                      .mul(weights.x),
+                  )
+                  .add(
+                    triangle.textureCoords[1]
+                      .abs()
+                      .div(depths.y)
+                      .mul(weights.y),
+                  )
+                  .add(
+                    triangle.textureCoords[2]
+                      .abs()
+                      .div(depths.z)
+                      .mul(weights.z),
+                  )
+                  .mul(depth);
+
+              const normal = float3.zero
+                .add(triangle.normals[0].div(depths.x).mul(weights.x))
+                .add(triangle.normals[1].div(depths.y).mul(weights.y))
+                .add(triangle.normals[2].div(depths.z).mul(weights.z))
+                .mul(depth);
 
               renderTarget.plotAtDepth(
                 x,
                 y,
                 depth,
-                model.shader.getPixelColour(texCoord, triangle),
+                model.shader.getPixelColour(texCoord, normal, triangle),
               );
             }
           }

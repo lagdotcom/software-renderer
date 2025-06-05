@@ -24,6 +24,7 @@ export interface Triangle {
   vertexIndices: number[];
   textureCoords: float2[];
   textureIndices: number[];
+  normals: float3[];
   normalIndices: number[];
 }
 
@@ -49,19 +50,12 @@ export default class Model {
       index,
       vertices: t.vertexIndices.map((i) => this.vertices[i]),
       textureCoords: t.textureIndices.map((i) => this.textureCoords[i]),
+      normals: t.normalIndices.map((i) => this.vertexNormals[i]),
     }));
   }
 
   toString() {
     return `${this.name} ${this.transform.toString()}`;
-  }
-
-  private updateTriangles() {
-    this.triangles = this.triangles.map((t) => ({
-      ...t,
-      vertices: t.vertexIndices.map((i) => this.vertices[i]),
-    }));
-    return this;
   }
 
   translate(x = 0, y = 0, z = 0) {
@@ -72,8 +66,10 @@ export default class Model {
   }
 
   scale(x: number, y = x, z = y) {
-    this.vertices = this.vertices.map((v) => v.mul(x, y, z));
-    return this.updateTriangles();
+    this.transform.scale.x *= x;
+    this.transform.scale.y *= y;
+    this.transform.scale.z *= z;
+    return this;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

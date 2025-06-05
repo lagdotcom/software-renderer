@@ -1,4 +1,5 @@
 import { clamp } from "../tools/clamp";
+import { abs } from "./maths";
 import Random from "./Random";
 
 export interface float2like<T extends number = number> {
@@ -26,7 +27,6 @@ export default class float2<T extends number = number> {
     return new float2<T>(this.y, -this.x as T);
   }
 
-  // TODO check this
   saturate() {
     return new float2(clamp<number>(this.x, 0, 1), clamp<number>(this.y, 0, 1));
   }
@@ -45,5 +45,9 @@ export default class float2<T extends number = number> {
 
   div(x: number, y = x) {
     return new float2(this.x / x, this.y / y);
+  }
+
+  abs() {
+    return new float2(abs(this.x), abs(this.y));
   }
 }
