@@ -7,19 +7,11 @@ import {
   createTestImage01,
   createTestImage02,
 } from "./lib/helpers";
-import {
-  ceil,
-  floor,
-  max,
-  min,
-  pointInTriangle,
-  tan,
-  toRadians,
-} from "./lib/maths";
+import { ceil, floor, max, min, pointInTriangle, toRadians } from "./lib/maths";
 import Model from "./lib/Model";
 import { MathRNG } from "./lib/Random";
 import RenderTarget from "./lib/RenderTarget";
-import Transform from "./lib/Transform";
+import Scene from "./lib/Scene";
 import { clamp } from "./tools/clamp";
 import enumerate from "./tools/enumerate";
 
@@ -177,38 +169,19 @@ export function modelDemo(
   models: Model[],
   fov: Degrees = 60,
 ) {
-  const rng = new MathRNG();
-  const triangleColours = enumerate(75).map(() =>
-    float3.random<Intensity>(rng, 1, 1, 1),
-  );
   const { width, height } = ctx.canvas;
   const renderTarget = new RenderTarget(width, height);
-  const screenCentre = renderTarget.size.div(2);
   const camera = new Camera(fov);
+  const scene = new Scene(renderTarget, camera, models);
   const keys = addKeyHandler();
   const getMouseUpdate = addMouseHandler();
   const debug = addDebugBox();
-
-  const vertexToScreen = (v: float3, transform: Transform) => {
-    const size = renderTarget.size;
-    const world = transform.toWorldPoint(v);
-    const view = camera.transform.toLocalPoint(world);
-
-    const screenHeightWorld = tan(camera.fov / 2) * 2;
-    const pixelsPerWorldUnit = size.y / screenHeightWorld / view.z;
-
-    const pixelOffset = view.xy.mul(pixelsPerWorldUnit);
-    const screen = screenCentre.add(pixelOffset);
-    return new float3(screen.x, screen.y, view.z);
-  };
 
   const mouseSensitivity = 0.0002;
   const camSpeed = 0.8;
   const minPitch = toRadians(-85);
   const maxPitch = toRadians(85);
   const update = (delta: Milliseconds) => {
-    renderTarget.clear();
-
     const mouseDelta = getMouseUpdate().mul(mouseSensitivity * delta);
     camera.transform.pitch = clamp(
       camera.transform.pitch - mouseDelta.y,
@@ -234,84 +207,6 @@ export function modelDemo(
     debug.add(camera.toString());
   };
 
-  const render = () => {
-    let ci = -1;
-    for (const model of models) {
-      debug.add(model.toString());
-
-      for (const triangle of model.triangles) {
-        ci = (ci + 1) % triangleColours.length;
-        const [a, b, c] = triangle.vertices.map((v) =>
-          vertexToScreen(v, model.transform),
-        );
-        if (a.z <= 0 || b.z <= 0 || c.z <= 0) continue;
-
-        const minX = min(a.x, b.x, c.x);
-        const minY = min(a.y, b.y, c.y);
-        const maxX = max(a.x, b.x, c.x);
-        const maxY = max(a.y, b.y, c.y);
-
-        const startX = clamp(floor(minX), 0, width - 1);
-        const startY = clamp(floor(minY), 0, height - 1);
-        const endX = clamp(ceil(maxX), 0, width - 1);
-        const endY = clamp(ceil(maxY), 0, height - 1);
-
-        for (let y = startY; y <= endY; y++)
-          for (let x = startX; x <= endX; x++) {
-            const [inside, weights] = pointInTriangle(
-              a.xy,
-              b.xy,
-              c.xy,
-              new float2(x, y),
-            );
-            if (inside) {
-              const depths = new float3(a.z, b.z, c.z);
-              const depth = 1 / float3.dot(depths.reciprocal(), weights);
-              if (renderTarget.depthTest(x, y, depth)) continue;
-
-              let texCoord = float2.zero;
-              if (triangle.textureCoords.length >= 3)
-                texCoord = texCoord
-                  .add(
-                    triangle.textureCoords[0]
-                      .abs()
-                      .div(depths.x)
-                      .mul(weights.x),
-                  )
-                  .add(
-                    triangle.textureCoords[1]
-                      .abs()
-                      .div(depths.y)
-                      .mul(weights.y),
-                  )
-                  .add(
-                    triangle.textureCoords[2]
-                      .abs()
-                      .div(depths.z)
-                      .mul(weights.z),
-                  )
-                  .mul(depth);
-
-              const normal = float3.zero
-                .add(triangle.normals[0].div(depths.x).mul(weights.x))
-                .add(triangle.normals[1].div(depths.y).mul(weights.y))
-                .add(triangle.normals[2].div(depths.z).mul(weights.z))
-                .mul(depth);
-
-              renderTarget.plotAtDepth(
-                x,
-                y,
-                depth,
-                model.shader.getPixelColour(texCoord, normal, triangle),
-              );
-            }
-          }
-      }
-    }
-
-    ctx.putImageData(renderTarget.data, 0, 0);
-  };
-
   let time: Milliseconds = performance.now();
   const tick = (newTime: DOMHighResTimeStamp) => {
     const delta = newTime - time;
@@ -319,7 +214,9 @@ export function modelDemo(
 
     debug.clear();
     update(delta);
-    render();
+    renderTarget.clear();
+    scene.render(debug.add);
+    ctx.putImageData(renderTarget.data, 0, 0);
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
