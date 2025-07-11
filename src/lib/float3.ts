@@ -1,5 +1,5 @@
 import float2 from "./float2";
-import { sqrt } from "./maths";
+import { lerp, sqrt } from "./maths";
 import Random from "./Random";
 
 export interface float3like<T extends number = number> {
@@ -23,6 +23,10 @@ export default class float3<T extends number = number> {
 
   static dot(a: float3like, b: float3like) {
     return a.x * b.x + a.y * b.y + a.z * b.z;
+  }
+
+  static lerp(a: float3like, b: float3like, t: number) {
+    return new float3(lerp(a.x, b.x, t), lerp(a.y, b.y, t), lerp(a.z, b.z, t));
   }
 
   toString() {

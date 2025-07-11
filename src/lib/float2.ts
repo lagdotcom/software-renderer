@@ -1,5 +1,5 @@
 import { clamp } from "../tools/clamp";
-import { abs } from "./maths";
+import { abs, lerp } from "./maths";
 import Random from "./Random";
 
 export interface float2like<T extends number = number> {
@@ -21,6 +21,10 @@ export default class float2<T extends number = number> {
 
   static dot(a: float2like, b: float2like) {
     return a.x * b.x + a.y * b.y;
+  }
+
+  static lerp(a: float2like, b: float2like, t: number) {
+    return new float2(lerp(a.x, b.x, t), lerp(a.y, b.y, t));
   }
 
   perpendicular() {

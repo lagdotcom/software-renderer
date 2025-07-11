@@ -37,7 +37,7 @@ export default class RenderTarget {
 
   depthTest(x: Pixels, y: Pixels, depth: number) {
     const di = y * this.width + x;
-    return depth > this.depth[di];
+    return depth >= this.depth[di];
   }
 
   plotAtDepth(

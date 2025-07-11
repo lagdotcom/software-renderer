@@ -1,6 +1,7 @@
 import { Radians } from "../flavours";
 import float2 from "./float2";
 import float3 from "./float3";
+import RasterPoint from "./RasterPoint";
 import Shader from "./Shader";
 import Transform from "./Transform";
 
@@ -33,6 +34,7 @@ export default class Model {
   textureCoords: float2[];
   vertexNormals: float3[];
   triangles: Triangle[];
+  rasterPoints: RasterPoint[];
 
   constructor(
     public name: string,
@@ -52,6 +54,7 @@ export default class Model {
       textureCoords: t.textureIndices.map((i) => this.textureCoords[i]),
       normals: t.normalIndices.map((i) => this.vertexNormals[i]),
     }));
+    this.rasterPoints = [];
   }
 
   toString() {

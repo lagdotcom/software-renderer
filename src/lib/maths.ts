@@ -1,4 +1,5 @@
 import { Degrees, Radians } from "../flavours";
+import { clamp } from "../tools/clamp";
 import float2 from "./float2";
 import float3 from "./float3";
 
@@ -41,4 +42,8 @@ export function toRadians(a: Degrees): Radians {
 
 export function toDegrees(a: Radians): Degrees {
   return (a / TWO_PI) * 360;
+}
+
+export function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * clamp(t, 0, 1);
 }

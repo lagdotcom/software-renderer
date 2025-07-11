@@ -16,6 +16,7 @@ export default class RandomShader implements Shader {
   getPixelColour(
     texCoord: float2,
     normal: float3,
+    depth: number,
     triangle: Triangle,
   ): float3<Intensity> {
     return this.colours[triangle.index % this.colours.length];
